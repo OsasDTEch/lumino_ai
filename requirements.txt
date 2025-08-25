@@ -11,6 +11,7 @@ pydantic
 pydantic[email]
 aiosmtplib
 pydantic_ai
+PyPDF2
 langgraph
 psycopg2-binary
 supabase
