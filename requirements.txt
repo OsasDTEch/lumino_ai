@@ -1,0 +1,16 @@
+fastapi[all]
+uvicorn[standard]
+python-dotenv
+httpx
+sqlalchemy>=2.0
+asyncpg
+alembic
+passlib[bcrypt]
+python-jose[cryptography]
+pydantic
+pydantic[email]
+aiosmtplib
+pydantic_ai
+langgraph
+psycopg2-binary
+
