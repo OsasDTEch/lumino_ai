@@ -14,6 +14,7 @@ from lumino_graph import workflow
 from database.storage import save_to_supabase
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
+import uuid
 from utils.extract_text import extract_text_from_pdf
 import urllib.parse
 
@@ -104,7 +105,7 @@ async def apply_candidates(
             raise HTTPException(status_code=400, detail="Only PDF files are allowed")
 
         # ✅ Save resume to Supabase
-        resume_path = f"resume/{email}_{file.filename}"
+        resume_path = f"resume/{email}_{file.filename}{uuid.uuid4()}"
         file_content = await file.read()
 
         # ✅ Extract text from resume
@@ -149,6 +150,7 @@ async def apply_candidates(
                 candidate_data,
                 config={"configurable": {"thread_id": f"apply_{email}_{job_id}"}}
             )
+            print(result)
             print("Workflow completed successfully")
         except Exception as workflow_error:
             print(f"Workflow error: {workflow_error}")
@@ -168,7 +170,7 @@ async def apply_candidates(
         # ✅ Update candidate with AI-extracted info
         if parsed_resume:
             new_candidate.skills = parsed_resume.get("skills", [])
-            new_candidate.years_experience = parsed_resume.get("work_experience", 0)
+            new_candidate.years_experience = parsed_resume.get("years_experience", 0)
             db.commit()
             db.refresh(new_candidate)
 
@@ -187,6 +189,7 @@ async def apply_candidates(
         # Store generated email with correct field names
         if email_data and email_data.get("subject"):
             try:
+                print(email_data)
                 new_email = models.Email(
                     application_id=new_application.id,  # Correct field name
                     to_email=email_data.get("to_email", email),
@@ -222,6 +225,41 @@ async def apply_candidates(
 async def get_jobs(db: Session = Depends(get_db)):
     jobs = db.query(models.Job).all()
     return jobs
+
+@app.get('/jobs/{id}', response_model=schema.JobOut)
+async def get_jobs_by_id(id: int, db: Session = Depends(get_db)):
+    job = db.query(models.Job).filter(models.Job.id == id).first()
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    return job
+@app.get('/candidates', response_model=List[schema.CandidateBase])
+async def get_candidates(db:Session= Depends(get_db)):
+    candidates= db.query(models.Candidate).all()
+    if not candidates:
+        raise HTTPException(status_code=404, detail='candidate not found')
+    return candidates
+
+@app.get('/candidates/{id}', response_model= schema.CandidateBase)
+async def get_candidates_by_id(id:int, db: Session=Depends(get_db)):
+    candidate= db.query(models.Candidate).filter(models.Candidate.id==id).first()
+    if not candidate:
+        raise HTTPException(status_code=404, detail='Candidate not found')
+    return candidate
+
+@app.get('/email', response_model=schema.EmailBase)
+async def get_email(db:Session= Depends(get_db)):
+    email= db.query(models.Email).all()
+    if not email:
+        raise HTTPException(status_code=404,detail='email not found')
+    return email
+
+@app.get('/email/app/{id}', response_model=schema.EmailBase)
+async def get_email_for_app(id:int, db:Session= Depends(get_db)):
+    email= db.query(models.Email).filter(models.Email.application_id== id).first()
+    if not email:
+        raise HTTPException(status_code=404, detail='Email not found')
+    return email
+
 
 # ✅ Add endpoint to test if workflow is working
 @app.get('/test-workflow')

@@ -9,7 +9,8 @@ import asyncio
 # Import agents
 from agents.resume_parser import resume_parser_agent, ResumeParsed
 from agents.evaluating_agent import evaluator, Evaluated
-from agents.messaging_agent import messaging_agent, EmailMessage
+# ✅ UPDATED: Import the new function instead of the agent
+from agents.messaging_agent import create_and_send_email
 
 
 # ----------------------------
@@ -22,7 +23,7 @@ class ApplicationState(TypedDict):
     evaluation: Dict[str, Any]
     email: Dict[str, Any]
     job_role: str
-    candidate_name: str  # ✅ Add these to make data flow easier
+    candidate_name: str
     candidate_email: str
 
 
@@ -36,7 +37,7 @@ async def parse_resume(state: ApplicationState) -> ApplicationState:
     result = await resume_parser_agent.run(state["resume_text"])
     state["parsed_resume"] = result.output.model_dump()
 
-    # ✅ Extract candidate info for later use
+    # Extract candidate info for later use
     state["candidate_name"] = state["parsed_resume"].get("full_name", "Candidate")
     state["candidate_email"] = state["parsed_resume"].get("email", "test@example.com")
 
@@ -60,6 +61,7 @@ async def evaluate_candidate(state: ApplicationState) -> ApplicationState:
     return state
 
 
+# ✅ UPDATED: Fixed email sending node
 async def send_email_node(state: ApplicationState) -> ApplicationState:
     """Generate + send email based on evaluation"""
     print("🔄 Generating and sending email...")
@@ -67,7 +69,7 @@ async def send_email_node(state: ApplicationState) -> ApplicationState:
     eval_result = state["evaluation"]
     parsed_resume = state["parsed_resume"]
 
-    # ✅ Create clean input data for messaging agent
+    # Create clean input data for messaging function
     email_input = {
         "candidate_name": state["candidate_name"],
         "candidate_email": state["candidate_email"],
@@ -77,13 +79,19 @@ async def send_email_node(state: ApplicationState) -> ApplicationState:
         "parsed_resume": parsed_resume
     }
 
-    # ✅ Convert to clean JSON string
-    prompt = f"Create and send an email for this candidate: {json.dumps(email_input)}"
+    # ✅ Use the new function that separates content creation from sending
+    result = await create_and_send_email(email_input)
 
-    result = await messaging_agent.run(prompt)
-    state["email"] = result.output.model_dump()
+    # ✅ Store only the email content (not the send status)
+    state["email"] = {
+        "to_email": result["to_email"],
+        "subject": result["subject"],
+        "body": result["body"]
+    }
 
     print(f"✅ Email sent to: {state['candidate_email']}")
+    print(f"Subject: {state['email']['subject']}")
+
     return state
 
 
@@ -109,14 +117,14 @@ workflow = graph.compile(checkpointer=MemorySaver())
 # ----------------------------
 async def run_graph():
     init_state = {
-        "job_role": "AI Engineer",  # ✅ Add job role
+        "job_role": "AI Engineer",
         "job_description": """
         We are hiring an AI Engineer with expertise in Python, ML, DL (TensorFlow or PyTorch),
         NLP, and cloud deployment experience.
         """,
         "resume_text": """
         John Doe
-        📍 Lagos, Nigeria | 📞 +234 814 123 4567 | ✉️ johndoe@email.com
+        📍 Lagos, Nigeria | 📞 +234 814 123 4567 | ✉️ osasxf001@gmail.com
 
         Professional Summary
         Software Engineer with 4 years experience in Python, FastAPI, React, 
@@ -129,7 +137,6 @@ async def run_graph():
         - Built ML recommendation system
         - Deployed models on AWS
         """,
-        # ✅ Initialize empty fields
         "parsed_resume": {},
         "evaluation": {},
         "email": {},
@@ -142,6 +149,8 @@ async def run_graph():
         init_state,
         config={"configurable": {"thread_id": "session-123"}}
     )
+    print('Here is the result:')
+    print(result)
 
     print("\n📊 Final Results:")
     print(f"Candidate: {result['candidate_name']}")

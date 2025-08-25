@@ -49,7 +49,7 @@ class JobOut(BaseModel):
     description: str
 
     class Config:
-        orm_mode= True
+        from_attributes= True
 
 
 class JobResponse(JobBase):
@@ -59,7 +59,7 @@ class JobResponse(JobBase):
 
     class Config:
         from_attributes = True
-        orm_mode= True
+
 
 
 # -------------------------------
