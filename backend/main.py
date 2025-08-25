@@ -72,7 +72,7 @@ async def add_jobs(jobs: schema.JobBase, db: Session = Depends(get_db)):
             salary_max=jobs.salary_max,
             seniority=jobs.seniority,
             requirements=jobs.requirements,
-            posted_by= jobs.poster
+            posted_by= jobs.posted_by
         )
         db.add(new_job)
         db.commit()

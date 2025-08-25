@@ -37,7 +37,7 @@ class JobBase(BaseModel):
     salary_max: Optional[float] = None
     seniority: Optional[str] = None
     requirements: Optional[dict] = None
-    poster:int
+    posted_by:int
     status: Optional[str] = "open"
 
 
@@ -50,6 +50,7 @@ class JobOut(BaseModel):
 
     class Config:
         from_attributes= True
+        orm_mode = True
 
 
 class JobResponse(JobBase):
@@ -59,6 +60,7 @@ class JobResponse(JobBase):
 
     class Config:
         from_attributes = True
+        orm_mode = True
 
 
 
@@ -87,6 +89,7 @@ class CandidateResponse(CandidateBase):
 
     class Config:
         from_attributes = True
+        orm_mode = True
 
 #candidate out
 
