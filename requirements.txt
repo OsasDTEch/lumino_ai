@@ -13,4 +13,5 @@ aiosmtplib
 pydantic_ai
 langgraph
 psycopg2-binary
+supabase
 
