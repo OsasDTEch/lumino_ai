@@ -37,7 +37,7 @@ class JobBase(BaseModel):
     salary_max: Optional[float] = None
     seniority: Optional[str] = None
     requirements: Optional[dict] = None
-    poster_by:int
+    poster:int
     status: Optional[str] = "open"
 
 
