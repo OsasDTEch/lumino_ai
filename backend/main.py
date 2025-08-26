@@ -246,7 +246,7 @@ async def get_candidates_by_id(id:int, db: Session=Depends(get_db)):
         raise HTTPException(status_code=404, detail='Candidate not found')
     return candidate
 
-@app.get('/email', response_model=schema.EmailBase)
+@app.get('/email', response_model=List[schema.EmailBase])
 async def get_email(db:Session= Depends(get_db)):
     email= db.query(models.Email).all()
     if not email:
