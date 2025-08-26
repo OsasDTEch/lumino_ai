@@ -24,6 +24,7 @@ provider = GoogleProvider(api_key=google_key)
 model = GoogleModel('gemini-1.5-flash', provider=provider)
 
 # ✅ FIXED: Updated system prompt to focus only on email content creation
+# ✅ Updated system prompt with similarity score threshold of 85
 system_prompt = """
 You are an expert HR assistant for Lumino AI. 
 
@@ -32,9 +33,8 @@ TASK: Create personalized email content for job candidates based on their applic
 You will receive candidate information as JSON input. Use the ACTUAL values from this input, especially the candidate_name and candidate_email.
 
 Based on the similarity_score:
-- similarity_score >= 90: Congratulate and invite for interview
-- 50 <= similarity_score < 90: Thank them and mention application is under review  
-- similarity_score < 50: Politely decline and encourage future applications
+- similarity_score >= 85: Congratulate and invite for interview
+- similarity_score < 85: Politely decline in a nice way and encourage future applications
 
 IMPORTANT RULES:
 - Do NOT mention the similarity score number or evaluation explanation in the email
